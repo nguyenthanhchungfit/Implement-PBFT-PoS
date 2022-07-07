@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option go_package = "github.com/implement-pbft-pos/core/core-rpc";
+
+package corerpc;
+
+service ConsensusProtocol {
+  rpc OnProposeMessage(GProposeMessage) returns (GResult) {}
+  rpc OnPreVoteMessage(GPreVoteMessage) returns (GResult) {}
+  rpc OnPreCommitMessage(GPreCommitMessage) returns (GResult) {}
+}
+
+message GData {
+  uint64 timestamp = 1;
+  string data = 2;
+}
+
+message GProposeMessage {
+  int32 height = 1;
+  int32 round = 2;
+  GData data = 3;
+  int32 validRound = 4;
+}
+
+message GPreCommitMessage {
+  int32 height = 1;
+  int32 round = 2;
+  bytes hashValue = 3;
+}
+
+message GPreVoteMessage {
+  int32 height = 1;
+  int32 round = 2;
+  bytes hashValue = 3;
+}
+
+message GResult {
+  int32 error = 1;
+  string data = 2;
+}
