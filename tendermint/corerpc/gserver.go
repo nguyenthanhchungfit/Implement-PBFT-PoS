@@ -9,7 +9,8 @@ import (
 )
 
 type GServerConfig struct {
-	Port int16
+	Id int
+	Port uint16
 }
 
 type GServer struct {
@@ -17,12 +18,13 @@ type GServer struct {
 }
 
 func (s *GServer) StartServer(){
+	//log.Printf("Node StartServer: %d, port: %d\n", s.ServerCfg.Id, s.ServerCfg.Port)
 	port := s.ServerCfg.Port;
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}else{
-		log.Printf("Start listen at port: %d", port)
+		log.Printf("Start listen at port: %d" , port)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
@@ -36,7 +38,7 @@ type consensusProtocolServer struct {
 }
 
 func (s *consensusProtocolServer) OnProposeMessage(ctx context.Context, message *GProposeMessage) (*GResult, error) {
-	fmt.Printf("OnProposeMessage %d\n", message.Round)
+	fmt.Printf("OnProposeMessage %v\n", message)
 	return &GResult{Error: 0, Data: "onProposeMessage"}, nil
 }
 

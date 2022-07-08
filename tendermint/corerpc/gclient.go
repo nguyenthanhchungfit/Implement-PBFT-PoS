@@ -11,7 +11,7 @@ import (
 
 type GClientConfig struct {
 	Host string
-	Port int16
+	Port uint16
 }
 
 type GClient struct {
