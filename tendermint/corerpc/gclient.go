@@ -3,6 +3,7 @@ package core_rpc
 import (
 	"context"
 	"fmt"
+	"github.com/implement-pbft-pos/tendermint/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -12,6 +13,10 @@ import (
 type GClientConfig struct {
 	Host string
 	Port uint16
+}
+
+func (clientCfg GClientConfig) String() string {
+	return fmt.Sprintf("GClientConf(Host: %s, Port: %d)", clientCfg.Host, clientCfg.Port)
 }
 
 type GClient struct {
@@ -26,7 +31,31 @@ func (client *GClient) SendProposeMessage(message *GProposeMessage) int32{
 	var opts []grpc.CallOption
 	result, error := client.innerClient.OnProposeMessage(ctx, message, opts...)
 	if error != nil {
-		log.Println("sendProposeMessage failed %d", error)
+		utils.ErrorStdOutLogger.Printf("sendProposeMessage failed %d", error)
+		return -1
+	}
+	return result.Error
+}
+
+func (client *GClient) SendPreVoteMessage(message *GPreVoteMessage) int32{
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	var opts []grpc.CallOption
+	result, error := client.innerClient.OnPreVoteMessage(ctx, message, opts...)
+	if error != nil {
+		utils.ErrorStdOutLogger.Printf("SendPreVoteMessage failed %d", error)
+		return -1
+	}
+	return result.Error
+}
+
+func (client *GClient) SendPreCommitMessage(message *GPreCommitMessage) int32{
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	var opts []grpc.CallOption
+	result, error := client.innerClient.OnPreCommitMessage(ctx, message, opts...)
+	if error != nil {
+		utils.ErrorStdOutLogger.Printf("SendPreCommitMessage failed %d", error)
 		return -1
 	}
 	return result.Error
