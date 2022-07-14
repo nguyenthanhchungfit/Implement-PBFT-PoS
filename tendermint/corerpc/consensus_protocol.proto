@@ -20,18 +20,23 @@ message GProposeMessage {
   int32 round = 2;
   GData data = 3;
   int32 validRound = 4;
+  int32 nodeId = 5;
 }
 
 message GPreCommitMessage {
   int32 height = 1;
   int32 round = 2;
   bytes hashValue = 3;
+  bytes signature = 4;
+  int32 nodeId = 5;
 }
 
 message GPreVoteMessage {
   int32 height = 1;
   int32 round = 2;
   bytes hashValue = 3;
+  bytes signature = 4;
+  int32 nodeId = 5;
 }
 
 message GResult {

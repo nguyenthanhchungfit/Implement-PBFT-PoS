@@ -15,9 +15,9 @@ type GServerConfig struct {
 }
 
 type IProcessor interface {
-	ReceiveProposeMessage(height, round, validRound int32, data string)
-	ReceivePreVoteMessage(height, round int32, hashValue []byte)
-	ReceivePreCommitMessage(height, round int32, hashValue []byte)
+	ReceiveProposeMessage(height, round, validRound int32, data string, nodeId int32)
+	ReceivePreVoteMessage(height, round int32, hashValue, signature []byte, nodeId int32)
+	ReceivePreCommitMessage(height, round int32, hashValue, signature []byte, nodeId int32)
 }
 
 type GServer struct {
@@ -48,17 +48,17 @@ type consensusProtocolServer struct {
 }
 
 func (s *consensusProtocolServer) OnProposeMessage(ctx context.Context, message *GProposeMessage) (*GResult, error) {
-	s.Processor.ReceiveProposeMessage(message.Height, message.Round, message.ValidRound, message.Data.Data)
+	s.Processor.ReceiveProposeMessage(message.Height, message.Round, message.ValidRound, message.Data.Data, message.NodeId)
 	return &GResult{Error: 0, Data: "onProposeMessage"}, nil
 }
 
 func (s *consensusProtocolServer) OnPreVoteMessage(ctx context.Context, message *GPreVoteMessage) (*GResult, error) {
-	s.Processor.ReceivePreVoteMessage(message.Height, message.Round, message.HashValue)
+	s.Processor.ReceivePreVoteMessage(message.Height, message.Round, message.HashValue, message.Signature, message.NodeId)
 	return &GResult{Error: 0, Data: "OnPreVoteMessage"}, nil
 }
 
 func (s *consensusProtocolServer) OnPreCommitMessage(ctx context.Context, message *GPreCommitMessage) (*GResult, error) {
-	s.Processor.ReceivePreCommitMessage(message.Height, message.Round, message.HashValue)
+	s.Processor.ReceivePreCommitMessage(message.Height, message.Round, message.HashValue, message.Signature, message.NodeId)
 	return &GResult{Error: 0, Data: "OnPreCommitMessage"}, nil
 }
 

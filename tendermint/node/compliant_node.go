@@ -16,12 +16,12 @@ type CompliantNode struct {
 }
 
 
-func (node* CompliantNode) InitNode(id int32, listenPort uint16, neighborNodes []*NeighborNode,
+func (node* CompliantNode) InitNode(id int32, listenPort uint16, keyPair *utils.KeyPair, neighborNodes []*NeighborNode,
 	selector *consensus.ProposerSelector, consensusCfg *consensus.ConsensusConfig){
 	node.Id = id
 	node.Port = listenPort
 	gServerCfg := core_rpc.GServerConfig{Port : node.Port, Id: id}
-	node.Processor = consensus.CompliantProcessor{Selector: selector, NodeId: id, ConsensusConfig: consensusCfg}
+	node.Processor = consensus.CompliantProcessor{Selector: selector, NodeId: id, ConsensusConfig: consensusCfg, KeyPair: keyPair}
 	node.Server = core_rpc.GServer{ServerCfg: gServerCfg, Processor: node.Processor }
 	node.NeighborNodes = neighborNodes
 }

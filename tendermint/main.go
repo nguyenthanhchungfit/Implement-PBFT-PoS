@@ -57,7 +57,7 @@ func main() {
 				idxNeighbor++
 			}
 		}
-		compliantNode.InitNode(nodeInfo.Id, nodeInfo.ListenPort, neighborNodes, &proposerSelector, &consensusCfg)
+		compliantNode.InitNode(nodeInfo.Id, nodeInfo.ListenPort, nodeInfo.KeyPair, neighborNodes, &proposerSelector, &consensusCfg)
 		compliantNode.StartServer(&wg)
 		compliantNodes[idxCompliantNode] = compliantNode
 		idxCompliantNode++
