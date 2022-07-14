@@ -1,13 +1,15 @@
 package consensus
 
+import "time"
+
 type ConsensusConfig struct {
-	TimeoutPropose uint32
-	TimeoutPreVote uint32
-	TimeoutPreCommit uint32
+	TimeoutPropose time.Duration
+	TimeoutPreVote time.Duration
+	TimeoutPreCommit time.Duration
 }
 
 const (
-	STEP_PROPOSE uint8 = 1
+	STEP_PROPOSE int8 = 1
 	STEP_PRE_VOTE		= 2
 	STEP_PRE_COMMIT		= 3
 )

@@ -10,7 +10,7 @@ import (
 )
 
 type GServerConfig struct {
-	Id   int
+	Id   int32
 	Port uint16
 }
 

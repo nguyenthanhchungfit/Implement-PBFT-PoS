@@ -61,9 +61,10 @@ func (client *GClient) SendPreCommitMessage(message *GPreCommitMessage) int32{
 	return result.Error
 }
 
-func NewGClient(cfg GClientConfig) *GClient {
-	client := GClient{ClientConfig: cfg}
-	serverAddr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+func (client *GClient) ConnectToRemote()  {
+	host := client.ClientConfig.Host
+	port := client.ClientConfig.Port
+	serverAddr := fmt.Sprintf("%s:%d", host, port)
 	//var opts []grpc.DialOption
 	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -71,5 +72,4 @@ func NewGClient(cfg GClientConfig) *GClient {
 	}
 	//defer conn.Close()
 	client.innerClient = NewConsensusProtocolClient(conn)
-	return &client
 }

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/implement-pbft-pos/tendermint/consensus"
 	core_rpc "github.com/implement-pbft-pos/tendermint/corerpc"
 	"github.com/implement-pbft-pos/tendermint/node"
 	"github.com/implement-pbft-pos/tendermint/utils"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 )
@@ -19,48 +19,62 @@ func main() {
 	var wg sync.WaitGroup
 	numNodes := 5
 	beginPort := 9000
-	ports := make([]uint16, numNodes)
-	nodes := make([]node.CompliantNode, numNodes)
-	allNodeIds := make([]int, numNodes)
+	nodeIds := make([]int32, numNodes)
+	nodeInfos := make([]*node.NodeInfo, numNodes)
+	compliantNodes := make([]node.CompliantNode, numNodes)
 
-	for idx := 0; idx < numNodes; idx++ {
-		ports[idx] = uint16(beginPort + idx)
-		allNodeIds[idx] = idx
+	consensusCfg := consensus.ConsensusConfig{
+		TimeoutPropose:   300 * time.Millisecond,
+		TimeoutPreVote:   400 * time.Millisecond,
+		TimeoutPreCommit: 400 * time.Millisecond,
 	}
 
-	proposerSelector := consensus.ProposerSelector{NodeIds: allNodeIds}
+	// Init list node
+	for idx := 1; idx <= numNodes; idx++ {
+		host := "0.0.0.0"
+		nodeId := int32(idx)
+		listenPort := uint16(beginPort + idx - 1)
+		keyPair, _ := utils.GenerateNewKeyPair()
+		nodeInfo := node.NodeInfo{Host: host, Id: nodeId, ListenPort: listenPort, KeyPair: keyPair}
+		nodeInfos[idx - 1] = &nodeInfo
+		nodeIds[idx - 1] = nodeId
+	}
+	proposerSelector := consensus.ProposerSelector{NodeIds: nodeIds}
 
-	for idx := 0; idx < numNodes; idx++ {
+	// Start Server and Init List Neighbors for nodes
+	idxCompliantNode := 0
+	for _, nodeInfo := range nodeInfos {
 		var compliantNode = node.CompliantNode{}
-		log.Printf("compliantNode %p\n", &compliantNode)
-		listenPort := ports[idx]
-		neighborCfgs := make([]core_rpc.GClientConfig, 0)
-		for idy := 0; idy < numNodes; idy++ {
-			if idx != idy {
-				neighborCfg := core_rpc.GClientConfig{Host: "0.0.0.0", Port: ports[idy]}
-				neighborCfgs = append(neighborCfgs, neighborCfg)
+
+		neighborNodes := make([]*node.NeighborNode, numNodes-1)
+		idxNeighbor := 0
+		for _, clientNodeInfo := range nodeInfos {
+			if clientNodeInfo.Id != nodeInfo.Id {
+				gClient := core_rpc.GClient{ClientConfig: core_rpc.GClientConfig{Host: clientNodeInfo.Host, Port: clientNodeInfo.ListenPort}}
+				neighborNode := node.NeighborNode{NodeId: clientNodeInfo.Id, PublicKey: clientNodeInfo.KeyPair.PublicKey,
+					Client: &gClient}
+				neighborNodes[idxNeighbor] = &neighborNode
+				idxNeighbor++
 			}
 		}
-		compliantNode.InitNode(idx, listenPort, neighborCfgs, &proposerSelector)
-		nodes[idx] = compliantNode
-	}
-
-	for idx, _ := range nodes {
-		compliantNode := nodes[idx]
+		compliantNode.InitNode(nodeInfo.Id, nodeInfo.ListenPort, neighborNodes, &proposerSelector, &consensusCfg)
 		compliantNode.StartServer(&wg)
+		compliantNodes[idxCompliantNode] = compliantNode
+		idxCompliantNode++
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 
-	for idx, _ := range nodes {
-		compliantNode := nodes[idx]
-		compliantNode.ConnectNeighborNodes()
+	fmt.Println("********** Start connect to neighbor nodes **********")
+	for _, compliantNode := range compliantNodes {
+		node := compliantNode
+		node.ConnectNeighborNodes()
 	}
 
-	for idx, _ := range nodes {
-		compliantNode := nodes[idx]
-		compliantNode.StartConsensus()
-	}
+	//for idx, _ := range compliantNodes {
+	//	compliantNode := compliantNodes[idx]
+	//	compliantNode.StartConsensus()
+	//}
 
 	wg.Wait()
 
