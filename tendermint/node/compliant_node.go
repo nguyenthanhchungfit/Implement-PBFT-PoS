@@ -1,8 +1,10 @@
 package node
 
 import (
+	"fmt"
 	"github.com/implement-pbft-pos/tendermint/consensus"
 	core_rpc "github.com/implement-pbft-pos/tendermint/corerpc"
+	"github.com/implement-pbft-pos/tendermint/middleware"
 	"github.com/implement-pbft-pos/tendermint/utils"
 	"sync"
 )
@@ -11,19 +13,26 @@ type CompliantNode struct {
 	Id int32
 	Port uint16
 	Server core_rpc.GServer
-	Processor consensus.CompliantProcessor
-	NeighborNodes []* NeighborNode
+	Processor *consensus.CompliantProcessor
+	NeighborNodes []* consensus.NeighborNode
 }
 
 
-func (node* CompliantNode) InitNode(id int32, listenPort uint16, keyPair *utils.KeyPair, neighborNodes []*NeighborNode,
+func (node* CompliantNode) InitNode(id int32, listenPort uint16, keyPair *utils.KeyPair, neighborNodes []*consensus.NeighborNode,
 	selector *consensus.ProposerSelector, consensusCfg *consensus.ConsensusConfig){
 	node.Id = id
 	node.Port = listenPort
-	gServerCfg := core_rpc.GServerConfig{Port : node.Port, Id: id}
-	node.Processor = consensus.CompliantProcessor{Selector: selector, NodeId: id, ConsensusConfig: consensusCfg, KeyPair: keyPair}
-	node.Server = core_rpc.GServer{ServerCfg: gServerCfg, Processor: node.Processor }
 	node.NeighborNodes = neighborNodes
+	neighborNodesId := make([]int32, len(neighborNodes))
+	for idx, neighborNode := range neighborNodes {
+		neighborNodesId[idx] = neighborNode.NodeId
+	}
+	gServerCfg := core_rpc.GServerConfig{Port : node.Port, Id: id}
+	node.Processor = &consensus.CompliantProcessor{Selector: selector, NodeId: id, ConsensusConfig: consensusCfg, KeyPair: keyPair,
+		NeighborNodeIds: neighborNodesId, NeighborNodes: neighborNodes}
+	middleware := middleware.ConsensusMiddleware{Processor: node.Processor}
+	node.Server = core_rpc.GServer{ServerCfg: gServerCfg, Processor: middleware }
+
 }
 
 func (node* CompliantNode) StartServer(wg * sync.WaitGroup){
@@ -42,5 +51,14 @@ func (node* CompliantNode) ConnectNeighborNodes(){
 }
 
 func (node* CompliantNode) StartConsensus(){
-	node.Processor.StartRound(0)
+	go func() {
+		node.Processor.StartConsensus()
+	}()
+}
+
+func (node* CompliantNode) StartPing(){
+	go func() {
+		fmt.Println("alo alo")
+		node.Processor.TestPing()
+	}()
 }

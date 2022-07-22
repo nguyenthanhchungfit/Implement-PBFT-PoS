@@ -24,9 +24,9 @@ func main() {
 	compliantNodes := make([]node.CompliantNode, numNodes)
 
 	consensusCfg := consensus.ConsensusConfig{
-		TimeoutPropose:   300 * time.Millisecond,
-		TimeoutPreVote:   400 * time.Millisecond,
-		TimeoutPreCommit: 400 * time.Millisecond,
+		TimeoutPropose:   1000 * time.Millisecond,
+		TimeoutPreVote:   1000 * time.Millisecond,
+		TimeoutPreCommit: 1000 * time.Millisecond,
 	}
 
 	// Init list node
@@ -46,12 +46,12 @@ func main() {
 	for _, nodeInfo := range nodeInfos {
 		var compliantNode = node.CompliantNode{}
 
-		neighborNodes := make([]*node.NeighborNode, numNodes-1)
+		neighborNodes := make([]*consensus.NeighborNode, numNodes-1)
 		idxNeighbor := 0
 		for _, clientNodeInfo := range nodeInfos {
 			if clientNodeInfo.Id != nodeInfo.Id {
 				gClient := core_rpc.GClient{ClientConfig: core_rpc.GClientConfig{Host: clientNodeInfo.Host, Port: clientNodeInfo.ListenPort}}
-				neighborNode := node.NeighborNode{NodeId: clientNodeInfo.Id, PublicKey: clientNodeInfo.KeyPair.PublicKey,
+				neighborNode := consensus.NeighborNode{NodeId: clientNodeInfo.Id, PublicKey: clientNodeInfo.KeyPair.PublicKey,
 					Client: &gClient}
 				neighborNodes[idxNeighbor] = &neighborNode
 				idxNeighbor++
@@ -63,7 +63,7 @@ func main() {
 		idxCompliantNode++
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	fmt.Println("********** Start connect to neighbor nodes **********")
 	for _, compliantNode := range compliantNodes {
@@ -71,10 +71,13 @@ func main() {
 		node.ConnectNeighborNodes()
 	}
 
-	//for idx, _ := range compliantNodes {
-	//	compliantNode := compliantNodes[idx]
-	//	compliantNode.StartConsensus()
-	//}
+	time.Sleep(1 * time.Second)
+	fmt.Println("********** Start Consensus **********")
+	for idx, _ := range compliantNodes {
+		compliantNode := compliantNodes[idx]
+		compliantNode.StartConsensus()
+		//compliantNode.StartPing()
+	}
 
 	wg.Wait()
 
