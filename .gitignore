@@ -4,3 +4,6 @@
 
 ### go
 go.sum
+
+### my app
+tendermint/**/my-tendermint
