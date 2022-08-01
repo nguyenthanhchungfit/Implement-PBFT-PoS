@@ -13,6 +13,7 @@ import (
 type GClientConfig struct {
 	Host string
 	Port uint16
+	Timeout uint64
 }
 
 func (clientCfg GClientConfig) String() string {

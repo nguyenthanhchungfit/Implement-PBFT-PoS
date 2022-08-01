@@ -8,6 +8,7 @@ service ConsensusProtocol {
   rpc OnProposeMessage(GProposeMessage) returns (GResult) {}
   rpc OnPreVoteMessage(GPreVoteMessage) returns (GResult) {}
   rpc OnPreCommitMessage(GPreCommitMessage) returns (GResult) {}
+  rpc StartConsensus(GRequest) returns (GResult){}
 }
 
 message GData {
@@ -21,6 +22,7 @@ message GProposeMessage {
   GData data = 3;
   int32 validRound = 4;
   int32 nodeId = 5;
+  bytes signature = 6;
 }
 
 message GPreCommitMessage {
@@ -42,4 +44,8 @@ message GPreVoteMessage {
 message GResult {
   int32 error = 1;
   string data = 2;
+}
+
+message GRequest {
+  int32 status = 1;
 }

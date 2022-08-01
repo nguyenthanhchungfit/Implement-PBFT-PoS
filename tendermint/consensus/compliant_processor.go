@@ -292,7 +292,10 @@ func (processor *CompliantProcessor) broadcastProposeMsg(height, round, validRou
 			neighbor.Client.SendProposeMessage(&msg)
 		}
 	} else {
-		msg := core_rpc.GProposeMessage{Height: height, Round: round, ValidRound: validRound, Data: nil}
+		byteData := []byte(data)
+		signature := utils.SignData(processor.KeyPair.PrivateKey, byteData)
+		gData := core_rpc.GData{Data: data}
+		msg := core_rpc.GProposeMessage{Height: height, Round: round, ValidRound: validRound, Data: &gData, Signature: signature}
 		for _, neighbor := range processor.NeighborNodes {
 			neighbor.Client.SendProposeMessage(&msg)
 		}

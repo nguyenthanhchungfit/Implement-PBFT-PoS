@@ -18,6 +18,18 @@ func Hash(msg string) []byte {
 	return out
 }
 
+func GenerateNewKeyPairAndDump(folderPath string) (*KeyPair, error) {
+	keyPair, err := GenerateNewKeyPair()
+	if err == nil {
+		pubKeyPath := folderPath + "ed25519_pub_key"
+		priKeyPath := folderPath + "ed26619_pri_key"
+
+		WriteDataToFile(pubKeyPath, keyPair.PublicKey)
+		WriteDataToFile(priKeyPath, keyPair.PrivateKey)
+	}
+	return keyPair, err
+}
+
 func GenerateNewKeyPair() (*KeyPair, error) {
 	pubKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {

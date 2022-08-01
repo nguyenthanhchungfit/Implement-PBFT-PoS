@@ -16,6 +16,7 @@ require (
 	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7 // indirect
+	gopkg.in/ini.v1 v1.66.6 // indirect
 )
 
 //replace google.golang.org/grpc => ../

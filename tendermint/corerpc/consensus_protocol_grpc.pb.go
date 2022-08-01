@@ -25,6 +25,7 @@ type ConsensusProtocolClient interface {
 	OnProposeMessage(ctx context.Context, in *GProposeMessage, opts ...grpc.CallOption) (*GResult, error)
 	OnPreVoteMessage(ctx context.Context, in *GPreVoteMessage, opts ...grpc.CallOption) (*GResult, error)
 	OnPreCommitMessage(ctx context.Context, in *GPreCommitMessage, opts ...grpc.CallOption) (*GResult, error)
+	StartConsensus(ctx context.Context, in *GRequest, opts ...grpc.CallOption) (*GResult, error)
 }
 
 type consensusProtocolClient struct {
@@ -62,6 +63,15 @@ func (c *consensusProtocolClient) OnPreCommitMessage(ctx context.Context, in *GP
 	return out, nil
 }
 
+func (c *consensusProtocolClient) StartConsensus(ctx context.Context, in *GRequest, opts ...grpc.CallOption) (*GResult, error) {
+	out := new(GResult)
+	err := c.cc.Invoke(ctx, "/corerpc.ConsensusProtocol/StartConsensus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConsensusProtocolServer is the server API for ConsensusProtocol service.
 // All implementations must embed UnimplementedConsensusProtocolServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type ConsensusProtocolServer interface {
 	OnProposeMessage(context.Context, *GProposeMessage) (*GResult, error)
 	OnPreVoteMessage(context.Context, *GPreVoteMessage) (*GResult, error)
 	OnPreCommitMessage(context.Context, *GPreCommitMessage) (*GResult, error)
+	StartConsensus(context.Context, *GRequest) (*GResult, error)
 	mustEmbedUnimplementedConsensusProtocolServer()
 }
 
@@ -84,6 +95,9 @@ func (UnimplementedConsensusProtocolServer) OnPreVoteMessage(context.Context, *G
 }
 func (UnimplementedConsensusProtocolServer) OnPreCommitMessage(context.Context, *GPreCommitMessage) (*GResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnPreCommitMessage not implemented")
+}
+func (UnimplementedConsensusProtocolServer) StartConsensus(context.Context, *GRequest) (*GResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartConsensus not implemented")
 }
 func (UnimplementedConsensusProtocolServer) mustEmbedUnimplementedConsensusProtocolServer() {}
 
@@ -152,6 +166,24 @@ func _ConsensusProtocol_OnPreCommitMessage_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConsensusProtocol_StartConsensus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsensusProtocolServer).StartConsensus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/corerpc.ConsensusProtocol/StartConsensus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsensusProtocolServer).StartConsensus(ctx, req.(*GRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConsensusProtocol_ServiceDesc is the grpc.ServiceDesc for ConsensusProtocol service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +202,10 @@ var ConsensusProtocol_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OnPreCommitMessage",
 			Handler:    _ConsensusProtocol_OnPreCommitMessage_Handler,
+		},
+		{
+			MethodName: "StartConsensus",
+			Handler:    _ConsensusProtocol_StartConsensus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

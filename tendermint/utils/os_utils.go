@@ -27,3 +27,23 @@ func EnsureFullPath(path string, mod os.FileMode) {
 		}
 	}
 }
+
+func WriteDataToFile(filePath string, data []byte) int {
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+	if err != nil {
+		log.Err(err)
+		return -1
+	}
+	defer file.Close()
+
+	bytesWritten, err := file.Write(data)
+	if err != nil {
+		log.Err(err)
+		return -1
+	}
+	if bytesWritten > 0 {
+		return 0
+	} else {
+		return -2
+	}
+}
