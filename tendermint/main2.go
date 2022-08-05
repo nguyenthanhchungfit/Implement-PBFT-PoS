@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/implement-pbft-pos/tendermint/consensus"
 	core_rpc "github.com/implement-pbft-pos/tendermint/corerpc"
@@ -14,7 +15,33 @@ import (
 	"time"
 )
 
+func convertStrToTime(rawStr string) time.Time {
+	myTime, err := time.Parse("15:04", rawStr)
+	if err != nil {
+		panic(err)
+	}
+	timeNow := time.Now()
+	convertTime := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), myTime.Hour(), myTime.Minute(), 0, 0, timeNow.Location())
+	return convertTime
+}
+
 func main() {
+	utils.InitLogConsole()
+	startConnect := flag.String("tconnect", "10:00", "Time point connect neighbor nodes")
+	startConsensus := flag.String("tstart", "10:10", "Time point start consensus")
+	flag.Parse()
+	tStartConnect := convertStrToTime(*startConnect)
+	tStartConsensus := convertStrToTime(*startConsensus)
+
+	if tStartConnect.Before(time.Now()) || tStartConsensus.Before(tStartConnect){
+		utils.ErrorStdOutLogger.Println("Time is invalid")
+		os.Exit(1)
+	}
+
+	utils.InfoStdOutLogger.Printf("TStartConnect: %v\n", tStartConnect)
+	utils.InfoStdOutLogger.Printf("TStartConsensus: %v\n", tStartConsensus)
+	utils.InfoStdOutLogger.Printf("Current Time: %v\n", time.Now())
+
 	cfg, err := config.Load("config.ini")
 	if err != nil {
 		utils.ErrorStdOutLogger.Printf("Failed to read file: %v\n", err)
@@ -41,7 +68,7 @@ func main() {
 		PublicKey:  pubKey,
 		PrivateKey: priKey,
 	}
-	fmt.Printf("pubKey: %x, privKey: %x\n", pubKey, priKey)
+	utils.InfoStdOutLogger.Printf("pubKey: %x, privKey: %x\n", pubKey, priKey)
 
 	// load neighbor info
 	cfgSectionNeighbors := "Neighbor_Nodes"
@@ -93,10 +120,16 @@ func main() {
 	node.StartServer(&wg)
 
 	// connect to neighbor nodes
-	time.Sleep(2 * time.Minute)
+	elapsedTimeConnect := tStartConnect.Sub(time.Now())
+	utils.InfoStdOutLogger.Printf("%v before start connect to neighbor nodes\n", elapsedTimeConnect)
+	time.Sleep(elapsedTimeConnect)
 	node.ConnectNeighborNodes()
 
 	// start consensus
+	elapsedTimeStart := tStartConsensus.Sub(time.Now())
+	utils.InfoStdOutLogger.Printf("%v before start consensus\n", elapsedTimeStart)
+	time.Sleep(elapsedTimeStart)
+	utils.InfoStdOutLogger.Println("Start Consensus")
 	node.StartConsensus()
 
 	wg.Wait()
